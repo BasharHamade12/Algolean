@@ -4,7 +4,7 @@ Algolean is a library of algorithms and complexity theory, defined broadly to in
 
 ## Nomenclature
 `Algolean` is a pun. It is intended to be read in two ways.
-* "Algo" + "Lean" : A library of algorithms theory in lean
+* "Algo" + "Lean" : A library of algorithms and complexity theory in lean
 * "Algol" + "ean" (pronounced like "ene") : To pay homage to Algol which motivates a lot of modern algorithmic pseudocode, and whose simplicity this framework hopes to mimic (hence the "ene").
 
 ## List of contributors
