@@ -1,14 +1,12 @@
 /-
 Copyright (c) 2026 Shreyas Srinivas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Shreyas Srinivas, Eric Wieser
+Authors: Shreyas Srinivas, Eric Wieser, Sorrachai Yingchareonthawornchai
 -/
 
 module
 
 public import Algolean.Models.ListComparisonSort
-public import Algolean.AddWriter.MergeSort.MergeSort
-import all Algolean.AddWriter.MergeSort.MergeSort
 import all Init.Data.List.Sort.Basic
 @[expose] public section
 
@@ -29,6 +27,15 @@ the `SortOps` model.
 - `mergeSort_sorted` :  `mergeSort` outputs a sorted list.
 - `mergeSort_perm` : The output of `mergeSort` is a permutation of the input list
 - `mergeSort_complexity` : `mergeSort` takes at most n * ⌈log n⌉ comparisons.
+
+## Notes on authorship
+
+When developing this file, an attempt was made to match the recursive structure of
+mergeSort in the TimeM framework and repurpose its analysis. These parts
+are therefore the work of Sorrachai Yingchareonthawornchai. Specifically,
+the time complexity function `T`, the lemma `some_algebra`, and its two
+dependencies `clog2_floor_half_le` and `clog2_half_le` are theirs. The rest of
+the code is written and refined by Shreyas Srinivas and Eric Wieser.
 -/
 namespace Algolean.Algorithms
 
@@ -167,7 +174,38 @@ theorem mergeSort_perm (xs : List α) (le : α → α → Bool) :
 
 section TimeComplexity
 
-open Algolean Algorithms AddWriter
+open Algolean Algorithms AddWriter Nat
+
+abbrev T (n : ℕ) : ℕ := n * clog 2 n
+
+/-- Key Lemma: ⌈log2 ⌈n/2⌉⌉ ≤ ⌈log2 n⌉ - 1 for n > 1 -/
+@[grind →]
+lemma clog2_half_le (n : ℕ) (h : n > 1) : clog 2 ((n + 1) / 2) ≤ clog 2 n - 1 := by
+  grind [Nat.clog_of_one_lt one_lt_two h]
+
+/-- Same logic for the floor half: ⌈log2 ⌊n/2⌋⌉ ≤ ⌈log2 n⌉ - 1 -/
+@[grind →]
+lemma clog2_floor_half_le (n : ℕ) (h : n > 1) : clog 2 (n / 2) ≤ clog 2 n - 1 := by
+  apply Nat.le_trans _ (clog2_half_le n h)
+  apply Nat.clog_monotone
+  grind
+
+private lemma some_algebra (n : ℕ) :
+    (n / 2 + 1) * clog 2 (n / 2 + 1) + ((n + 1) / 2 + 1) * clog 2 ((n + 1) / 2 + 1) + (n + 2) ≤
+    (n + 2) * clog 2 (n + 2) := by
+  -- 1. Substitution: Let N = n_1 + 2 to clean up the expression
+  let N := n + 2
+  have hN : N ≥ 2 := by omega
+  -- 2. Rewrite the terms using N
+  have t1 : n / 2 + 1 = N / 2 := by omega
+  have t2 : (n + 1) / 2 + 1 = (N + 1) / 2 := by omega
+  have t3 : n + 1 + 1 = N := by omega
+  let k := clog 2 N
+  have h_bound_l : clog 2 (N / 2) ≤ k - 1 := clog2_floor_half_le N hN
+  have h_bound_r : clog 2 ((N + 1) / 2) ≤ k - 1 := clog2_half_le N hN
+  have h_split : N / 2 + (N + 1) / 2 = N := by omega
+  grw [t1, t2, t3, h_bound_l, h_bound_r, ←Nat.add_mul, h_split]
+  exact Nat.le_refl (N * (k - 1) + N)
 
 -- TODO: reuse the work in `mergeSort_time_le`?
 theorem mergeSort_complexity (xs : List α) (le : α → α → Bool) :
