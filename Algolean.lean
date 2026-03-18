@@ -9,4 +9,6 @@ public import Algolean.LowerBounds.ComparisonSort
 public import Algolean.Models.ListComparisonSearch
 public import Algolean.Models.ListComparisonSort
 public import Algolean.Models.NCCircuits
+public import Algolean.Models.RobertsonWebb
+public import Algolean.Models.SingleTapeTM
 public import Algolean.QueryModel
