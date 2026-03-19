@@ -332,6 +332,7 @@ lemma listBinarySearch_time_complexity_upper_bound [BEq α] [LawfulBEq α] (le :
       simpa [Nat.succ_eq_add_one, Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
         Nat.succ_le_succ hmono₁
     exact le_trans s₃ hmono₂
+
 end BinarySearch
 
 end Algorithms
