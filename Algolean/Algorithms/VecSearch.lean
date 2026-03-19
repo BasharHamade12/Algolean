@@ -267,7 +267,73 @@ lemma vecBinarySearch_eval [BEq α] [LawfulBEq α] (le : α → α → Bool)
               apply hLe
               exact List.Pairwise.rel_of_mem_take_of_mem_drop (R := fun a b => le a b = true)
                 hSorted (list_getElem_mem_take_succ hmid_lt) hxDropSucc
+
+lemma one_add_log_le_log_of_two_mul_le {a b : Nat}
+    (ha : a ≠ 0) (h : 2 * a ≤ b) :
+    1 + Nat.log 2 a ≤ Nat.log 2 b := by
+  calc
+    1 + Nat.log 2 a = Nat.log 2 (a * 2) := by
+      simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
+        (Nat.log_mul_base (b := 2) (n := a) (by decide : 1 < 2) ha).symm
+    _ ≤ Nat.log 2 b := Nat.log_mono_right (Nat.mul_comm 2 a ▸ h)
+
+private lemma listBinarySearch_time_complexity_upper_bound_aux
+    [BEq α] [LawfulBEq α] (le : α → α → Bool)
+    [Std.Total (fun x y => le x y)] [IsTrans _ (fun x y => le x y)]
+    [Std.Antisymm (fun x y => le x y)] (v : Vector α n)
+    (hSorted : v.toList.Pairwise (fun x y => le x y)) :
+    (vecBinarySearch le v x).time ReadOnlyVec.natCost ≤ if n = 0 then 0 else 1 + Nat.log 2 n := by
+  fun_induction vecBinarySearch with
+  | case1 v =>
+      simp
+  | case2 n v hneq0 mid ih2 ih1 =>
+      simp_all only [vector_pairwise_extract, min_self, forall_const, Nat.sub_zero, Fin.is_le',
+        inf_of_le_left, tsub_zero, FreeM.lift_def, FreeM.pure_eq_pure,
+        Cslib.FreeM.bind_eq_bind, FreeM.liftBind_bind, FreeM.pure_bind, time_liftBind,
+        ReadOnlyVec.natCost_cost, ReadOnlyVec.natCost_evalQuery, Fin.getElem_fin]
+      split_ifs with heq hle <;> try contradiction
+      · simp
+      · have hrec : (vecBinarySearch le (v.extract (↑mid + 1)) x).time ReadOnlyVec.natCost ≤
+            Nat.log 2 n := by
+            by_cases hsz : n - (↑mid + 1) = 0
+            · exact le_trans (by simpa [hsz] using ih2) (Nat.zero_le _)
+            · exact le_trans (by simpa [hsz] using ih2) <|
+                one_add_log_le_log_of_two_mul_le hsz <| by
+                  have hmid : (mid : Nat) = n / 2 := by simp [mid]
+                  simpa [hmid] using (show 2 * (n - (n / 2 + 1)) ≤ n by grind)
+        simpa [Nat.succ_eq_add_one] using (Nat.succ_le_succ hrec)
+      · have hrec : (vecBinarySearch le (v.extract 0 ↑mid) x).time ReadOnlyVec.natCost ≤
+            Nat.log 2 n := by
+            by_cases hsz : (mid : Nat) = 0
+            · exact le_trans (by simpa [hsz] using ih1) (Nat.zero_le _)
+            · exact le_trans (by simpa [hsz] using ih1) <|
+                one_add_log_le_log_of_two_mul_le hsz <| by
+                  have hmid : (mid : Nat) = n / 2 := by simp [mid]
+                  simpa [hmid] using (show 2 * (n / 2) ≤ n by grind)
+        simpa [Nat.succ_eq_add_one] using (Nat.succ_le_succ hrec)
+
+lemma listBinarySearch_time_complexity_upper_bound [BEq α] [LawfulBEq α] (le : α → α → Bool)
+    [Std.Total (fun x y => le x y)] [IsTrans _ (fun x y => le x y)]
+    [Std.Antisymm (fun x y => le x y)] (v : Vector α n)
+    (hSorted : v.toList.Pairwise (fun x y => le x y)) :
+    (vecBinarySearch le v x).time ReadOnlyVec.natCost ≤ 1 + Nat.log 2 (n + 1) := by
+  by_cases hn : n = 0
+  · subst hn
+    have haux := listBinarySearch_time_complexity_upper_bound_aux
+      (le := le) (v := v) (x := x) hSorted
+    have s₁ : (vecBinarySearch le v x).time ReadOnlyVec.natCost ≤ 0 := by simpa using haux
+    exact le_trans s₁ (by decide)
+  · have s₂ := listBinarySearch_time_complexity_upper_bound_aux
+      (le := le) (v := v) (x := x) hSorted
+    have s₃ : (vecBinarySearch le v x).time ReadOnlyVec.natCost ≤ 1 + Nat.log 2 n := by
+      simpa [hn] using s₂
+    have hmono₁ : Nat.log 2 n ≤ Nat.log 2 (n + 1) := Nat.log_mono_right (Nat.le_add_right n 1)
+    have hmono₂ : 1 + Nat.log 2 n ≤ 1 + Nat.log 2 (n + 1) := by
+      simpa [Nat.succ_eq_add_one, Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
+        Nat.succ_le_succ hmono₁
+    exact le_trans s₃ hmono₂
 end BinarySearch
+
 end Algorithms
 
 end Algolean
