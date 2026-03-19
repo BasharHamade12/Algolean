@@ -47,6 +47,28 @@ def VecSearch.natCost [BEq α] : Model (VecSearch α) ℕ where
     | .compare a i x => x == a[i]
   cost _ := 1
 
+/--
+A query type for searching elements in list. It supports exactly one query
+`compare l val` which returns `true` if the head of the list `l` is equal to `val`
+and returns `false` otherwise.
+-/
+inductive OrderedVecSearch (α : Type*) : Type → Type _ where
+  | compare (a : Vector α n) (i : Fin n) (val : α) : OrderedVecSearch α Ordering
+
+
+/-- A model of the `VecSearch` query type that assigns the cost as the number of queries. -/
+@[simps]
+def OrderedVecSearch.natCost [BEq α] (le : α → α → Bool) : Model (OrderedVecSearch α) ℕ where
+  evalQuery
+    | .compare a i x =>
+        if x == a[i] then
+          Ordering.eq
+        else if le x a[i] then
+          Ordering.lt
+        else
+          Ordering.gt
+  cost _ := 1
+
 end Algorithms
 
 end Algolean

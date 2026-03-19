@@ -39,6 +39,8 @@ namespace Algorithms
 
 open Cslib Prog
 
+section LinearSearch
+
 open VecSearch in
 /-- Linear Search in Lists on top of the `ListSearch` query model. -/
 @[simp, grind]
@@ -128,6 +130,25 @@ lemma listLinearSearchM_time_complexity_lower_bound [DecidableEq α] [Nontrivial
           exact congrArg (fun t => t + 1) ih
         simpa [s₁, Vector.cast, Nat.add_comm] using hsucc
 
+end LinearSearch
+
+section BinarySearch
+
+open OrderedVecSearch in
+/-- Linear Search in Lists on top of the `ListSearch` query model. -/
+@[simp, grind]
+def vecBinarySearch (v : Vector α n) (x : α) : Prog (OrderedVecSearch α) Bool := do
+  if h : n = 0 then return false
+  else
+    let mut mid : Fin n := ⟨n / 2, by grind⟩
+    let cmp : Ordering ← compare v mid x
+    match cmp with
+    | Ordering.eq => return true
+    | Ordering.gt => vecBinarySearch (v.drop (mid + 1)) x
+    | Ordering.lt => vecBinarySearch (v.take mid) x
+
+
+end BinarySearch
 end Algorithms
 
 end Algolean
