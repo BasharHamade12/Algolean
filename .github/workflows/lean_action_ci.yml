@@ -31,3 +31,34 @@ jobs:
         uses: leanprover-community/docgen-action@main
         with:
           build-page: false
+
+  deploy-webpage:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare webpage artifact from docs/
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f docs/index.html
+          rm -rf _site
+          mkdir -p _site
+          cp -a docs/* _site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy webpage to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
