@@ -31,6 +31,7 @@ jobs:
         uses: leanprover-community/docgen-action@main
         with:
           build-page: true
+    
 
 
 
@@ -59,8 +60,11 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: webpage-pages
           path: _site
 
       - name: Deploy webpage to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: webpage-pages
