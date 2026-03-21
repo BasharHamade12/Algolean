@@ -9,6 +9,11 @@ on:
   merge_group:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
 jobs:
   ci-checks:
     runs-on: ubuntu-latest
