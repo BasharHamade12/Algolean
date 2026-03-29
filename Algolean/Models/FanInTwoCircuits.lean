@@ -106,7 +106,7 @@ def FanInTwoCircuit.circuitSize [DecidableEq α] (c : FanInTwoCircuit α β) :=
   | .neg c' => (subcircuits (.neg c')).card
 
 @[simp]
-lemma circuitSize_eq_subcircuits_card (c : FanInTwoCircuit Bool Bool) :
+lemma fanInTwocircuitSize_eq_subcircuits_card (c : FanInTwoCircuit Bool Bool) :
     c.subcircuits.card = c.circuitSize := by
   cases c <;> simp [FanInTwoCircuit.circuitSize, FanInTwoCircuit.subcircuits]
 
@@ -114,7 +114,7 @@ lemma circuitSize_eq_subcircuits_card (c : FanInTwoCircuit Bool Bool) :
 A model for the circuit query
 -/
 @[simps, grind]
-def circModel [Add α] [Mul α] [Neg α] [DecidableEq α] :
+def fanInTwoCircModel [Add α] [Mul α] [Neg α] [DecidableEq α] :
     Model (FanInTwoCircuit α) FanInTwoCircuitCosts where
   evalQuery q := q.circEval
   cost q := ⟨q.depthOf, q.circuitSize, q.formulaSize⟩
