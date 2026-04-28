@@ -279,9 +279,48 @@ theorem CircAndSplitSimple_depth (n : ℕ) (x : Fin n → Bool) :
         grind
       grind
 
+theorem CircAndSplitSimple_size_zero (x : Fin 0 → Bool) :
+    (CircAndSplitSimple 0 x).circuitSize ≤ 1 := by
+      simp only [CircAndSplitSimple]
+      simp only [circuitSize, subcircuits.eq_1, insert_empty_eq, Finset.card_singleton,
+        Std.le_refl]
 
-
-
+theorem CircAndSplitSimple_size_pos (n : ℕ) (hn : 0 < n) (x : Fin n → Bool) :
+    (CircAndSplitSimple n x).circuitSize ≤ 2 * n - 1 := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    match n with
+    | 1 =>
+      simp only [CircAndSplitSimple]
+      simp only [circuitSize, subcircuits.eq_1, insert_empty_eq, Finset.card_singleton,
+        Std.le_refl]
+    | n + 2 =>
+      unfold CircAndSplitSimple
+      let half := (n + 2) / 2
+      have h_le : half ≤ n + 2 := by omega
+      let x_left := CircAndSplitSimple half (Fin.take half h_le x)
+      let x_right := CircAndSplitSimple (n + 2 - half) (fun i => x ⟨i.val + half, by omega⟩)
+      change (x_left.mul x_right).circuitSize ≤ 2 * (n + 2) - 1
+      have h_left : x_left.circuitSize ≤ 2 * (half) - 1 := by
+        apply ih
+        · grind
+        · unfold half
+          grind
+      have h_right : x_right.circuitSize ≤ 2 * (n + 2 - half) - 1 := by
+        apply ih
+        · grind
+        · unfold half
+          grind
+      have h_mul_size : (x_left.mul x_right).circuitSize ≤
+      1 + x_left.circuitSize + x_right.circuitSize := by
+         grind [circuitSize, subcircuits, Finset.card_insert_le,
+         Finset.card_union_le, fanInTwocircuitSize_eq_subcircuits_card]
+      calc (x_left.mul x_right).circuitSize
+          ≤ 1 + x_left.circuitSize + x_right.circuitSize := h_mul_size
+        _ ≤ 1 + (2 * half - 1) + (2 * (n + 2 - half) - 1) := by gcongr
+        _ = 2 * (n + 2) - 1 := by
+            have : half + (n + 2 - half) = n + 2 := by omega
+            omega
 
 
 -- /--
